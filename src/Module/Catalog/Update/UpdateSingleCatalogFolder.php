@@ -99,6 +99,9 @@ final class UpdateSingleCatalogFolder extends AbstractCatalogUpdater implements 
                     $className = Song::class;
                     break;
             }
+            $art_order       = AmpConfig::get('art_order');
+            $gather_song_art = AmpConfig::get('gather_song_art', false);
+            $db_art_first    = ($art_order[0] == 'db');
             foreach ($file_ids as $file_id) {
                 /** @var Song|Podcast_Episode|Video $className */
                 $media     = new $className($file_id);
@@ -133,7 +136,6 @@ final class UpdateSingleCatalogFolder extends AbstractCatalogUpdater implements 
                     }
                     if ($searchArtMode == 1 && $file_id) {
                         // Look for media art after adding new files
-                        $gather_song_art = (AmpConfig::get('gather_song_art', false));
                         if ($type == 'song') {
                             $media    = new Song($file_id);
                             $art      = ($gather_song_art) ? new Art($file_id, $type) : new Art($media->album, $type);
@@ -141,10 +143,10 @@ final class UpdateSingleCatalogFolder extends AbstractCatalogUpdater implements 
                             $art_type = ($gather_song_art) ? 'song' : 'album';
                             $artist   = new Art($media->artist, $type);
                             if (!$art->has_db_info()) {
-                                Catalog::gather_art_item($art_type, $art_id, true);
+                                Catalog::gather_art_item($art_type, $art_id, $db_art_first);
                             }
                             if ($media->artist && !$artist->has_db_info()) {
-                                Catalog::gather_art_item('artist', $media->artist, true);
+                                Catalog::gather_art_item('artist', $media->artist, $db_art_first);
                             }
                         }
                         if ($type == 'video') {
